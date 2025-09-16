@@ -2,7 +2,7 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import requests
 from dotenv import load_dotenv
@@ -66,19 +66,37 @@ def parse_args():
     parser.add_argument("--expand", default="changelog", help="Expand fields")
     parser.add_argument("--fields", default="*all", help="Fields to return")
     parser.add_argument("-i", "--issue-keys", nargs="*", help="Issue keys")
+    parser.add_argument("-n", "--days", type=int, help="Fetch issues of last N days")
 
     args = parser.parse_args()
 
-    if not args.issue_keys and (not args.start_date or not args.end_date):
-        parser.error("--start-date and --end-date required when no issue keys provided")
+    if (
+        not args.issue_keys
+        and (not args.start_date or not args.end_date)
+        and not args.days
+    ):
+        parser.error("Either --issue-keys, --start-date, --days is required")
 
     return args
 
 
 def build_jql(args, project):
     if args.issue_keys:
-        return "key in (" + ",".join(args.issue_keys) + ")"
-    return f"project = {project} and updated >= {args.start_date} and updated <= {args.end_date} and status not in ('To Do', 'To Be Prepared', 'Ready for Development', 'In Code Review', 'in progress')"
+        return f"key in {tuple(join(args.issue_keys))}"
+
+    excluded_statuses = [
+        "To Do",
+        "To Be Prepared",
+        "Ready for Development",
+        "In Code Review",
+        "in progress",
+    ]
+
+    now = datetime.now()
+    start = args.start_date or (now - timedelta(days=args.days)).strftime("%Y-%m-%d")
+    end = args.end_date or now.strftime("%Y-%m-%d")
+
+    return f"project = {project} and updated >= {start} and updated <= {end} and status not in {tuple(excluded_statuses)}"
 
 
 def save_results(data, filename="search.json"):

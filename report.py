@@ -249,7 +249,7 @@ def assignee_report(workloads, issues, assignee_map):
                 issue_id,
                 {"key": "UNKNOWN", "title": "Unknown Issue", "timeestimate": 0},
             )
-            timeestimate = issue_info['timeestimate'] or 0
+            timeestimate = issue_info["timeestimate"] or 0
             print(
                 f"  {issue_info['key']} [{issue_id}]: {issue_info['title']} - {timeestimate / 3600:.2f} hours"
             )
@@ -283,7 +283,7 @@ def main():
 
     status_map = {
         "development": "10111",  # In progress
-        "review": "10359"        # In code review
+        "review": "10359",  # In code review
     }
 
     load_dotenv()
