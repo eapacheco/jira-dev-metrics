@@ -63,6 +63,22 @@ def map_assignees(response):
 
 
 def build_changelog(response):
+    """
+    Example:
+        {
+            "12345": {
+                "statuses": [
+                    {"date": "2023-01-01T10:00:00.000+0000", "from": None, "to": "10001"},
+                    {"date": "2023-01-02T14:30:00.000+0000", "from": "10001", "to": "10111"}
+                ],
+                "assignees": [
+                    {"date": "2023-01-01T10:00:00.000+0000", "from": None, "to": "user123"},
+                    {"date": "2023-01-03T09:15:00.000+0000", "from": "user123", "to": "user456"}
+                ]
+            }
+        }
+    """
+
     changelog = {}
 
     for issue in response["issues"]:
@@ -119,6 +135,16 @@ def build_changelog(response):
 
 
 def calculate_workload(changelog, target_status):
+    """
+    Example:
+        {
+            "issue-id-1": {
+                "assignee-id-2": 2.0,
+                "assignee-id-1": 1.0
+            }
+        }
+    """
+
     per_issue = {}
     for issue_id, fields in changelog.items():
         target_status_idx = [
@@ -204,7 +230,7 @@ def assignee_report(workloads, issues, assignee_map):
         issues_scores = groupped[assignee_id]
 
         total_timeestimate = sum(
-            issues.get(issue_id, {}).get("timeestimate", 0)
+            issues.get(issue_id, {}).get("timeestimate", None) or 0
             for issue_id in issues_scores
         )
 
@@ -223,8 +249,9 @@ def assignee_report(workloads, issues, assignee_map):
                 issue_id,
                 {"key": "UNKNOWN", "title": "Unknown Issue", "timeestimate": 0},
             )
+            timeestimate = issue_info['timeestimate'] or 0
             print(
-                f"  {issue_info['key']} [{issue_id}]: {issue_info['title']} - {issue_info['timeestimate'] / 3600:.2f} hours"
+                f"  {issue_info['key']} [{issue_id}]: {issue_info['title']} - {timeestimate / 3600:.2f} hours"
             )
     print("\n")
 
